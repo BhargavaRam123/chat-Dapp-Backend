@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Chat.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.19;\n\ncontract Chat \n{\nstruct friend{\n        string name;\n        address add;\n}\nstruct user{\n    string name;\n    friend[] friendlist;\n}\nstruct message{\n    address sender;\n    uint256 timestamp;\n    string msgcon;\n}\nmessage[] msgsbtw;\nmapping(address => user) public accounts;\nmapping(bytes32 => message[]) allmessages;\nfunction viewmessagesbtwtwo(address _raddress)view public returns(message[] memory)\n{\n  bytes32  hash = _getchatcode(_raddress);\n  return allmessages[hash];\n}\nfunction checkuserexists(address _address)public view returns(bool)\n{\n    if(bytes(accounts[_address].name).length == 0)\n    return false;\n    else\n    return true;\n} \nfunction createuser(string memory _name)public  {\n    require(checkuserexists(msg.sender)==false,\"You already have an account\");\n    require(bytes(_name).length!=0,\"Enter a valid name\");\n    accounts[msg.sender].name = _name;\n}\nfunction getusername() public view returns(string memory)\n{\n    return accounts[msg.sender].name;\n}\n\nfunction addFriend(address _faddress,string memory _name) public {\n    string memory _copy = accounts[_faddress].name;\n    require(checkalreadyfriends(_faddress)==false,\"Hey common you both are already friends\");\n    require(_faddress!=msg.sender,\"How can you friend yourself?\");\n    require(checkuserexists(_faddress),\"Friend you are trying to access,doesnt created his account\");\n    require(keccak256(bytes(_copy))==keccak256(bytes(_name)),\"please enter a valid name for the given address\");\n    accounts[msg.sender].friendlist.push(friend(_name,_faddress));\n    accounts[_faddress].friendlist.push(friend(accounts[msg.sender].name,msg.sender));\n}\n\nfunction checkalreadyfriends(address _faddress)public view returns (bool) \n{\n    for(uint i=0;i<accounts[_faddress].friendlist.length;i++)\n    {\n        if(accounts[_faddress].friendlist[i].add==msg.sender)\n        return true;\n    }\n    return false;\n}\n\nfunction getmyfriend() public view returns(friend[] memory)\n{\n    return accounts[msg.sender].friendlist;\n}\n\nfunction _getchatcode(address _raddress) public view returns (bytes32 )\n{\n    if(msg.sender > _raddress )\n    return bytes32(abi.encodePacked(msg.sender,_raddress));\n    else\n    return bytes32(abi.encodePacked(_raddress,msg.sender));\n}\n\nfunction sendmessage(address _raddress,string memory _message) public \n{\n    require(checkuserexists(msg.sender)==true,\"Create an account to send a message\");\n    require(checkuserexists(_raddress)==true,\"person you are trying to send a message doesnt has an account\");\n    require(checkalreadyfriends(_raddress),\"only friends can send the messages \");\n    require(keccak256(bytes(_message))!=keccak256(bytes(\"\")),\"enter a valid message\");\n    bytes32  hash = _getchatcode(_raddress);\n    allmessages[hash].push(message(msg.sender,block.timestamp,_message));\n}\n\nfunction readmessages(address _raddress) public view returns(message[] memory){\n    bytes32  hash = _getchatcode(_raddress);\n    return allmessages[hash];\n}\n\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
